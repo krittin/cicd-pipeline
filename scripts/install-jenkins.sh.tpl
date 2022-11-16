@@ -15,6 +15,8 @@ mkdir -p /var/lib/jenkins/init.groovy.d/
 cat > /var/lib/jenkins/jenkins.install.UpgradeWizard.state << EOF
 2.0
 EOF
+
+# TODO - find more secure way of doing this
 cat > /var/lib/jenkins/init.groovy.d/basic-security.groovy << EOF
 #!groovy
 
@@ -37,4 +39,21 @@ chown -R jenkins:jenkins /var/lib/jenkins/
 
 systemctl enable jenkins
 systemctl start jenkins
+
+# TODO - find more secure way of doing this
+cat > creds << EOF
+admin:${jenkins_admin_password}
+EOF
+
+wget http://localhost:8080/jnlpJars/jenkins-cli.jar
+# keep trying as update centre might be up on the first attempt
+while true; do
+	java -jar jenkins-cli.jar -s http://localhost:8080/ -auth @creds install-plugin 'workflow-aggregator' -deploy -restart
+	if [ $? -eq 0 ] ;then
+		break
+	else
+		sleep 5
+	fi
+done
+
 
